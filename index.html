@@ -1,1296 +1,853 @@
-<!DOCTYPE html>
+
+
+Chuyển đến nội dung
+Sử dụng Gmail bằng trình đọc màn hình
+Cuộc trò chuyện
+
+Có gắn dấu sao
+ 
+
+Mọi thứ khác
+ 
+1–50 trong số 817
+ 
+Đã dùng 1% trên tổng số 15 GB
+Điều khoản · Bảo mật · Chính sách chương trình
+Hoạt động gần đây nhất của tài khoản: 0 phút trước
+Mở tại 1 vị trí khác · Chi tiết
+<!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Manager AI</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Quản Lý Truyện — Drive + AI</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-            padding-bottom: 80px;
-        }
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.5; padding: 16px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .btn { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background: #fafafa; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #0b72ec; color: white; border-color: #0b72ec; }
+    .btn-secondary { background: #eee; }
+    .muted { color: #666; }
+    textarea, input[type="number"], input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
+    .card { border: 1px solid #eee; border-radius: 12px; padding: 12px; margin: 12px 0; }
+    #statusLog { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; max-height: 240px; overflow: auto; white-space: pre-wrap; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .story-content { padding: 12px; border: 1px dashed #ddd; border-radius: 8px; background: #fafafa; }
+    .label { font-weight: 600; margin-top: 6px; display: block; }
+  </style>
 
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px 20px 0 0;
-            padding: 20px;
-            box-shadow: 0 -5px 40px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            min-height: calc(100vh - 80px);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            color: #5a67d8;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .status {
-            padding: 12px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .status.connected {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-        }
-
-        .status.disconnected {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .section {
-            background: #f7fafc;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 25px;
-            border: 2px solid #e2e8f0;
-        }
-
-        .section h3 {
-            color: #2d3748;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4a5568;
-        }
-
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .input-group input:focus, .input-group select:focus {
-            outline: none;
-            border-color: #5a67d8;
-            box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 15px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover:before {
-            left: 100%;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #5a67d8, #4c51bf);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #f56565, #e53e3e);
-            color: white;
-        }
-
-        .btn-ai {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 200px;
-            padding: 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Monaco', 'Consolas', monospace;
-            resize: vertical;
-            background: white;
-            line-height: 1.5;
-        }
-
-        .file-list, .story-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            background: white;
-        }
-
-        .file-item, .story-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e2e8f0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .file-item:hover, .story-item:hover {
-            background: #f7fafc;
-            transform: translateX(5px);
-        }
-
-        .file-item:last-child, .story-item:last-child {
-            border-bottom: none;
-        }
-
-        .analysis-result {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #5a67d8, #667eea);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .chapter-list {
-            display: grid;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .chapter-item {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .chapter-item:hover {
-            border-color: #5a67d8;
-            transform: translateY(-2px);
-        }
-
-        .chapter-title {
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 5px;
-        }
-
-        .chapter-preview {
-            color: #718096;
-            font-size: 14px;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-top: 2px solid #e2e8f0;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 5px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-            text-decoration: none;
-            color: #718096;
-        }
-
-        .nav-item.active {
-            color: #5a67d8;
-            transform: scale(1.1);
-        }
-
-        .nav-item:hover {
-            color: #5a67d8;
-        }
-
-        .nav-icon {
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-
-        .nav-text {
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #718096;
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #e2e8f0;
-            border-top: 2px solid #5a67d8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .error {
-            background: linear-gradient(135deg, #fed7d7, #feb2b2);
-            color: #c53030;
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #fc8181;
-        }
-
-        .success {
-            background: linear-gradient(135deg, #c6f6d5, #9ae6b4);
-            color: #22543d;
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #68d391;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .story-reader {
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            max-height: 70vh;
-            overflow-y: auto;
-            line-height: 1.8;
-            font-size: 16px;
-        }
-
-        .reader-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .reader-controls button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            background: #5a67d8;
-            color: white;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        /* iPhone specific optimizations */
-        @media screen and (max-width: 414px) {
-            .container {
-                padding: 15px;
-                border-radius: 15px 15px 0 0;
-            }
-            
-            .header h1 {
-                font-size: 24px;
-            }
-            
-            .btn {
-                padding: 14px;
-                font-size: 15px;
-            }
-            
-            textarea {
-                min-height: 150px;
-                font-size: 15px;
-            }
-
-            .nav-icon {
-                font-size: 18px;
-            }
-
-            .nav-text {
-                font-size: 10px;
-            }
-        }
-    </style>
+  <!-- Google Identity Services + GAPI -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js" async defer
+          onload="gapiLoaded()"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📚 Story Manager AI</h1>
-            <p>Quản lý truyện thông minh với AI</p>
-        </div>
 
-        <div id="status" class="status disconnected">
-            🔴 Chưa kết nối Supabase
-        </div>
+  <h1>📚 Quản Lý Truyện — Google Drive + AI</h1>
 
-        <div id="message"></div>
+  <div class="card">
+    <div class="row">
+      <button id="authorize_button" class="btn btn-primary" style="display:none">Đăng nhập Google</button>
+      <button id="signout_button" class="btn btn-secondary" style="display:none">Đăng xuất</button>
+      <span class="muted">Thư mục chính: <code>QuanLyTruyen</code></span>
+    </div>
+  </div>
 
-        <!-- Settings Tab -->
-        <div id="settings-tab" class="tab-content active">
-            <div class="section">
-                <h3>⚙️ Cấu hình Supabase</h3>
-                <div class="input-group">
-                    <label for="supabaseUrl">Supabase URL:</label>
-                    <input type="url" id="supabaseUrl" placeholder="https://your-project.supabase.co">
-                </div>
-                <div class="input-group">
-                    <label for="supabaseKey">Supabase Anon Key:</label>
-                    <input type="password" id="supabaseKey" placeholder="Nhập anon key của bạn">
-                </div>
-                <div class="input-group">
-                    <label for="bucketName">Bucket Name:</label>
-                    <input type="text" id="bucketName" placeholder="text-files" value="text-files">
-                </div>
-                <button onclick="connectSupabase()" class="btn btn-primary">
-                    🔗 Kết nối Supabase
-                </button>
-            </div>
-
-            <div class="section">
-                <h3>📝 Quản lý File Txt</h3>
-                <div class="input-group">
-                    <label for="fileName">Tên file (có .txt):</label>
-                    <input type="text" id="fileName" placeholder="my-file.txt">
-                </div>
-                <div class="input-group">
-                    <label for="fileContent">Nội dung file:</label>
-                    <textarea id="fileContent" placeholder="Nhập nội dung file txt tại đây..."></textarea>
-                </div>
-                <button onclick="saveFile()" class="btn btn-secondary" disabled>
-                    💾 Lưu File
-                </button>
-                <button onclick="loadFiles()" class="btn btn-primary" disabled>
-                    🔄 Tải danh sách file
-                </button>
-                <div id="fileList" class="file-list">
-                    <div class="loading">Chưa kết nối...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Analysis Tab -->
-        <div id="analysis-tab" class="tab-content">
-            <div class="section">
-                <h3>🔍 Phân tích File Txt</h3>
-                <button onclick="analyzeAllFiles()" class="btn btn-ai" disabled>
-                    🧠 Phân tích tất cả file txt
-                </button>
-                <div id="analysisResult" class="analysis-result" style="display: none;">
-                    <h4>Kết quả phân tích:</h4>
-                    <div id="analysisContent"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AI Story Tab -->
-        <div id="ai-story-tab" class="tab-content">
-            <div class="section">
-                <h3>✨ Tạo truyện tự động với AI</h3>
-                <div class="input-group">
-                    <label for="storyTitle">Tên truyện:</label>
-                    <input type="text" id="storyTitle" placeholder="Tên truyện của bạn">
-                </div>
-                <div class="input-group">
-                    <label for="storyGenre">Thể loại:</label>
-                    <select id="storyGenre">
-                        <option value="fantasy">Huyền hương</option>
-                        <option value="romance">Lãng mạn</option>
-                        <option value="adventure">Phiêu lưu</option>
-                        <option value="mystery">Bí ẩn</option>
-                        <option value="sci-fi">Khoa học viễn tưởng</option>
-                        <option value="horror">Kinh dị</option>
-                        <option value="drama">Chính kịch</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="chapterCount">Số chương (tối thiểu 50):</label>
-                    <input type="number" id="chapterCount" value="50" min="50" max="200">
-                </div>
-                <div class="input-group">
-                    <label for="storyPrompt">Mô tả cốt truyện:</label>
-                    <textarea id="storyPrompt" placeholder="Mô tả ngắn gọn về cốt truyện, nhân vật chính..." style="min-height: 120px;"></textarea>
-                </div>
-                <button onclick="generateStory()" class="btn btn-ai" disabled>
-                    🎭 Tạo truyện với AI (50+ chương)
-                </button>
-                <div id="generationProgress" style="display: none;">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <p id="progressText">Đang tạo truyện...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Story List Tab -->
-        <div id="stories-tab" class="tab-content">
-            <div class="section">
-                <h3>📖 Danh sách truyện</h3>
-                <button onclick="loadStories()" class="btn btn-primary" disabled>
-                    🔄 Tải danh sách truyện
-                </button>
-                <div id="storyList" class="story-list">
-                    <div class="loading">Chưa kết nối...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Story Reader Tab -->
-        <div id="reader-tab" class="tab-content">
-            <div class="section">
-                <h3>📚 Đọc truyện</h3>
-                <div id="storySelector" style="display: none;">
-                    <div class="input-group">
-                        <label for="selectedStory">Chọn truyện:</label>
-                        <select id="selectedStory">
-                            <option value="">-- Chọn truyện --</option>
-                        </select>
-                    </div>
-                    <button onclick="loadStoryChapters()" class="btn btn-primary">
-                        📖 Tải truyện
-                    </button>
-                </div>
-                
-                <div id="chapterSelector" style="display: none;">
-                    <div class="reader-controls">
-                        <button onclick="previousChapter()" id="prevBtn" disabled>⬅️ Chương trước</button>
-                        <button onclick="nextChapter()" id="nextBtn">➡️ Chương sau</button>
-                    </div>
-                    <h4 id="currentChapterTitle">Chương 1</h4>
-                </div>
-
-                <div id="storyContent" class="story-reader" style="display: none;">
-                    <div id="chapterContent">Chọn truyện để bắt đầu đọc...</div>
-                </div>
-            </div>
-        </div>
+  <div class="grid">
+    <div class="card">
+      <h3>🔍 Quét & Phân tích dữ liệu</h3>
+      <div class="row">
+        <button id="scanBtn" class="btn">Quét .txt</button>
+        <button id="analyzeBtn" class="btn">Phân tích</button>
+        <button id="downloadScanCacheBtn" class="btn">Tải Scan Cache</button>
+        <button id="downloadAnalysisBtn" class="btn">Tải Analysis</button>
+        <button id="uploadAnalysisBtn" class="btn">Upload Analysis</button>
+        <button id="deleteCacheBtn" class="btn btn-secondary">Xoá cache</button>
+      </div>
+      <label class="label">Kết quả phân tích (rút gọn)</label>
+      <div id="analysisPreview" class="story-content"></div>
     </div>
 
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('settings')">
-            <div class="nav-icon">⚙️</div>
-            <div class="nav-text">Cài đặt</div>
+    <div class="card">
+      <h3>✍️ Viết truyện</h3>
+      <div class="row">
+        <div style="flex:1">
+          <label class="label" for="numChapters">Số chương</label>
+          <input id="numChapters" type="number" min="1" max="100" value="5" />
         </div>
-        <div class="nav-item" onclick="switchTab('analysis')">
-            <div class="nav-icon">🔍</div>
-            <div class="nav-text">Phân tích</div>
+        <div style="flex:1">
+          <label class="label" for="sensitivitySelect">Phong cách cảm xúc</label>
+          <select id="sensitivitySelect">
+            <option value="bình thản">Bình thản</option>
+            <option value="mãnh liệt">Mãnh liệt</option>
+            <option value="u hoài">U hoài</option>
+            <option value="lạc quan">Lạc quan</option>
+          </select>
         </div>
-        <div class="nav-item" onclick="switchTab('ai-story')">
-            <div class="nav-icon">✨</div>
-            <div class="nav-text">Tạo AI</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('stories')">
-            <div class="nav-icon">📖</div>
-            <div class="nav-text">Truyện</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('reader')">
-            <div class="nav-icon">📚</div>
-            <div class="nav-text">Đọc</div>
-        </div>
+      </div>
+      <div class="row">
+        <button id="generateBtn" class="btn btn-primary">Tạo truyện</button>
+        <button id="loadStoriesBtn" class="btn">Tải thư viện truyện</button>
+      </div>
+
+      <label class="label">Mô tả truyện vừa sinh</label>
+      <div id="storyPreview" class="story-content"></div>
     </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.3/supabase.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5/0.20.0/ml5.min.js"></script>
-    <script>
-        let supabase = null;
-        let bucketName = 'text-files';
-        let currentStory = null;
-        let currentChapter = 0;
-        let storyChapters = [];
+  <div class="card">
+    <h3>🗂️ Thư viện truyện (Google Drive)</h3>
+    <div id="storiesLibrary">
+      <p class="muted">Chưa có truyện nào trong thư viện.</p>
+    </div>
+  </div>
 
-        // Tab switching
-        function switchTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Remove active class from nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(tabName + '-tab').classList.add('active');
-            
-            // Add active class to clicked nav item
-            event.target.closest('.nav-item').classList.add('active');
+  <!-- Di chuyển readerContainer ra ngoài storiesLibrary để không bị ghi đè -->
+  <div id="readerContainer" style="display:none; margin-top:12px;">
+    <h3 id="readerTitle">📖 Đang đọc truyện</h3>
+    <div id="readerContent" class="story-content"></div>
+    <div style="margin-top:10px; display:flex; justify-content:space-between;">
+      <button class="btn btn-secondary" onclick="prevChapter()">⬅️ Chương trước</button>
+      <button class="btn btn-secondary" onclick="nextChapter()">Chương tiếp ➡️</button>
+    </div>
+  </div>
 
-            // Load data when switching to certain tabs
-            if (tabName === 'stories' && supabase) {
-                loadStories();
-            } else if (tabName === 'reader' && supabase) {
-                loadStorySelector();
-            }
+  <div class="card">
+    <h3>🧪 Ghi chú hệ thống</h3>
+    <div id="statusLog"></div>
+  </div>
+
+<script>
+/** =========================
+ *  Cấu hình Google API
+ *  ========================= */
+const CLIENT_ID     = '398509518475-7bjid324tkuuh9gv8b0g92lhsgv8nrl5.apps.googleusercontent.com';
+const API_KEY       = 'AIzaSyAbcWr0UPvC4YpsunE6uAa7E5pan9iys2o';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+const SCOPES        = 'https://www.googleapis.com/auth/drive.file';
+
+let tokenClient;
+let gapi_inited = false;
+let gis_inited  = false;
+
+function gapiLoaded() {
+  gapi.load('client', initializeGapiClient);
+}
+async function initializeGapiClient() {
+  try {
+    await gapi.client.init({
+      apiKey: API_KEY,
+      discoveryDocs: [DISCOVERY_DOC],
+    });
+    gapi_inited = true;
+    maybeEnableButtons();
+    writeDetailedStatus('✅ GAPI đã sẵn sàng.');
+  } catch (e) {
+    writeDetailedStatus('❌ Lỗi init GAPI: ' + e.message);
+  }
+}
+window.onload = () => {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: '', // set later
+  });
+  gis_inited = true;
+  maybeEnableButtons();
+  bindUIEvents();
+  defaultDisableButtons();
+};
+
+function maybeEnableButtons() {
+  const authBtn = document.getElementById('authorize_button');
+  const signOutBtn = document.getElementById('signout_button');
+  if (gapi_inited && gis_inited) {
+    authBtn.style.display = 'inline-block';
+  }
+  authBtn.onclick = handleAuthClick;
+  signOutBtn.onclick = handleSignoutClick;
+}
+
+function handleAuthClick() {
+  tokenClient.callback = async (resp) => {
+    if (resp.error) { throw(resp); }
+    document.getElementById('authorize_button').style.display = 'none';
+    document.getElementById('signout_button').style.display = 'inline-block';
+    showLoggedInState();
+    writeDetailedStatus('🔐 Đăng nhập thành công.');
+    // cố gắng load cache
+    await loadScanCache();
+    await loadAnalysisData();
+  };
+  if (gapi.client.getToken() === null) {
+    tokenClient.requestAccessToken({prompt: 'consent'});
+  } else {
+    tokenClient.requestAccessToken({prompt: ''});
+  }
+}
+function handleSignoutClick() {
+  const token = gapi.client.getToken();
+  if (token !== null) {
+    google.accounts.oauth2.revoke(token.access_token);
+    gapi.client.setToken('');
+  }
+  document.getElementById('authorize_button').style.display = 'inline-block';
+  document.getElementById('signout_button').style.display = 'none';
+  showLoggedOutState();
+  writeDetailedStatus('🚪 Đã đăng xuất.');
+}
+
+/** =========================
+ *  UI & trạng thái nút bấm
+ *  ========================= */
+function defaultDisableButtons() {
+  const ids = [
+    'scanBtn','analyzeBtn','generateBtn','downloadAnalysisBtn',
+    'downloadScanCacheBtn','loadStoriesBtn','uploadAnalysisBtn'
+  ];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+}
+function showLoggedInState() {
+  const enableButtons = [
+    'scanBtn','analyzeBtn','generateBtn','downloadAnalysisBtn',
+    'downloadScanCacheBtn','loadStoriesBtn','uploadAnalysisBtn'
+  ];
+  enableButtons.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+}
+function showLoggedOutState() {
+  const disableButtons = [
+    'scanBtn','analyzeBtn','generateBtn','downloadAnalysisBtn',
+    'downloadScanCacheBtn','loadStoriesBtn','uploadAnalysisBtn'
+  ];
+  disableButtons.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = true; });
+  document.getElementById('analysisPreview').innerHTML = '';
+  document.getElementById('storyPreview').innerHTML = '';
+  document.getElementById('storiesLibrary').innerHTML = '<p class="muted">Chưa có truyện nào trong thư viện.</p>';
+  document.getElementById('readerContainer').style.display = 'none';
+}
+function bindUIEvents() {
+  byId('scanBtn').onclick = scanTxtFiles;
+  byId('analyzeBtn').onclick = doAnalyze;
+  byId('generateBtn').onclick = handleGenerateStory;
+  byId('downloadScanCacheBtn').onclick = downloadScanCache;
+  byId('downloadAnalysisBtn').onclick = downloadAnalysis;
+  byId('uploadAnalysisBtn').onclick = manualUploadAnalysis;
+  byId('loadStoriesBtn').onclick = loadStories;
+  byId('deleteCacheBtn').onclick = async () => {
+    await deleteCache(CACHE_FILE_NAME);
+    await deleteCache(ANALYSIS_CACHE_NAME);
+    await deleteCache(STORY_CACHE_NAME);
+    updateStatus('🧹 Đã xoá cache.');
+  };
+}
+function byId(id){ return document.getElementById(id); }
+function updateStatus(msg){ const el = byId('statusLog'); el.textContent += (el.textContent? '\n' : '') + msg; el.scrollTop = el.scrollHeight; }
+function writeDetailedStatus(msg){ updateStatus(msg); }
+
+/** =========================
+ *  Hằng số tên file/folder
+ *  ========================= */
+const ROOT_FOLDER_NAME     = 'QuanLyTruyen';
+const CACHE_FILE_NAME      = 'ScanCache.json';
+const ANALYSIS_CACHE_NAME  = 'AnalysisResults.json';
+const STORY_CACHE_NAME     = 'GeneratedStories.json';
+const CACHE_VERSION        = '2.1.0';
+
+/** =========================
+ *  Trạng thái ứng dụng
+ *  ========================= */
+let scanCache       = { files: [] };
+let analysisData    = null;
+let generatedStories = [];
+let currentRead = { chapters: [], index: 0 };
+
+/** =========================
+ *  Helper Google Drive
+ *  ========================= */
+async function ensureOnlineAndAuth() {
+  if (!navigator.onLine) {
+    alert('⚠️ Bạn đang offline, không thể thao tác với Google Drive.');
+    return false;
+  }
+  if (!gapi_inited || !gapi.client) {
+    alert('⚠️ GAPI chưa sẵn sàng hoặc bạn chưa đăng nhập.');
+    return false;
+  }
+  return true;
+}
+async function getOrCreateRootFolder() {
+  const ok = await ensureOnlineAndAuth(); if (!ok) return null;
+  const found = await gapi.client.drive.files.list({
+    q: `name='${ROOT_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id, name)'
+  });
+  if (found.result.files.length > 0) return found.result.files[0].id;
+  const created = await gapi.client.drive.files.create({
+    resource: { name: ROOT_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' },
+    fields: 'id'
+  });
+  return created.result.id;
+}
+/** Upload chuẩn hoá bằng gapi.client.request() */
+async function uploadFileToDrive(fileId, metadata, contentString) {
+  try {
+    if (fileId) {
+      // Update (media)
+      await gapi.client.request({
+        path: `/upload/drive/v3/files/${fileId}`,
+        method: 'PATCH',
+        params: { uploadType: 'media' },
+        headers: { 'Content-Type': metadata.mimeType || 'application/json' },
+        body: contentString
+      });
+    } else {
+      // Create (multipart)
+      const boundary = '-------314159265358979323846';
+      const delimiter = "\r\n--" + boundary + "\r\n";
+      const close_delim = "\r\n--" + boundary + "--";
+      const multipartRequestBody =
+        delimiter +
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'Content-Type: ' + (metadata.mimeType || 'application/json') + '\r\n\r\n' +
+        contentString +
+        close_delim;
+      await gapi.client.request({
+        path: '/upload/drive/v3/files',
+        method: 'POST',
+        params: { uploadType: 'multipart' },
+        headers: { 'Content-Type': 'multipart/related; boundary="' + boundary + '"' },
+        body: multipartRequestBody
+      });
+    }
+  } catch (error) {
+    writeDetailedStatus('❌ Upload error: ' + error.message);
+  }
+}
+
+/** =========================
+ *  Cache module (versioned)
+ *  ========================= */
+async function saveCache(fileName, data) {
+  try {
+    const ok = await ensureOnlineAndAuth(); if (!ok) return;
+    const list = await gapi.client.drive.files.list({
+      q: `name='${fileName}' and trashed=false`,
+      fields: 'files(id)'
+    });
+    const cacheContent = {
+      version: CACHE_VERSION,
+      timestamp: new Date().toISOString(),
+      data
+    };
+    const metadata = { name: fileName, mimeType: 'application/json' };
+    const fileId = list.result.files.length > 0 ? list.result.files[0].id : null;
+    await uploadFileToDrive(fileId, metadata, JSON.stringify(cacheContent));
+    writeDetailedStatus(`✅ Saved cache: ${fileName}`);
+  } catch (e) {
+    writeDetailedStatus(`❌ Error saving cache ${fileName}: ` + e.message);
+  }
+}
+async function loadCache(fileName, maxAgeHours = 24) {
+  try {
+    const ok = await ensureOnlineAndAuth(); if (!ok) return null;
+    const list = await gapi.client.drive.files.list({
+      q: `name='${fileName}' and trashed=false`,
+      fields: 'files(id, name)'
+    });
+    if (list.result.files.length === 0) return null;
+    const fileId = list.result.files[0].id;
+    const res = await gapi.client.drive.files.get({ fileId, alt: 'media' });
+    let cache;
+    try {
+      cache = JSON.parse(res.body);
+    } catch (parseErr) {
+      writeDetailedStatus(`⚠️ Cache hỏng (JSON parse fail): ${fileName} — xoá file.`); 
+      await gapi.client.drive.files.delete({ fileId });
+      return null;
+    }
+    if (!cache.version || cache.version !== CACHE_VERSION) {
+      writeDetailedStatus(`⚠️ Cache version mismatch: ${fileName}`);
+      return null;
+    }
+    const ageHours = (Date.now() - new Date(cache.timestamp).getTime()) / 36e5;
+    if (ageHours > maxAgeHours) {
+      writeDetailedStatus(`⚠️ Cache expired (${ageHours.toFixed(1)}h): ${fileName}`);
+      return null;
+    }
+    writeDetailedStatus(`✅ Loaded cache: ${fileName}`);
+    return cache.data;
+  } catch (e) {
+    writeDetailedStatus(`❌ Error loading cache ${fileName}: ` + e.message);
+    return null;
+  }
+}
+async function deleteCache(fileName) {
+  try {
+    const ok = await ensureOnlineAndAuth(); if (!ok) return;
+    const list = await gapi.client.drive.files.list({
+      q: `name='${fileName}' and trashed=false`,
+      fields: 'files(id, name)'
+    });
+    for (const f of list.result.files) {
+      await gapi.client.drive.files.delete({ fileId: f.id });
+    }
+  } catch (e) {
+    writeDetailedStatus(`❌ Error deleting cache ${fileName}: ` + e.message);
+  }
+}
+
+/** =========================
+ *  Quét & phân tích dữ liệu
+ *  ========================= */
+async function scanTxtFiles() {
+  try {
+    const ok = await ensureOnlineAndAuth(); if (!ok) return;
+    updateStatus('🔎 Đang quét .txt trong thư mục QuanLyTruyen...');
+    const rootId = await getOrCreateRootFolder();
+    const files = await listTxtFilesDeep(rootId);
+    scanCache = { files };
+    await saveScanCache();
+    byId('analyzeBtn').disabled = files.length === 0;
+    byId('downloadScanCacheBtn').disabled = false;
+    updateStatus(`✅ Quét xong: ${files.length} file .txt`);
+  } catch (e) {
+    writeDetailedStatus('❌ scanTxtFiles: ' + e.message);
+  }
+}
+async function listTxtFilesDeep(parentId) {
+  const all = [];
+  async function dfs(folderId) {
+    const res = await gapi.client.drive.files.list({
+      q: `'${folderId}' in parents and trashed=false`,
+      fields: 'files(id, name, mimeType)',
+      pageSize: 1000
+    });
+    for (const f of res.result.files) {
+      if (f.mimeType === 'application/vnd.google-apps.folder') {
+        await dfs(f.id);
+      } else if (f.name.toLowerCase().endsWith('.txt')) {
+        all.push(f);
+      }
+    }
+  }
+  await dfs(parentId);
+  return all;
+}
+async function doAnalyze() {
+  try {
+    if (!scanCache || !Array.isArray(scanCache.files) || scanCache.files.length === 0) {
+      alert('⚠️ Không có file .txt để phân tích. Hãy quét trước.');
+      return;
+    }
+    updateStatus('🧠 Đang phân tích nội dung (demo gộp từ tên file)...');
+    // DEMO: phân tích sơ bộ dựa vào tên file (thực tế bạn thay bằng phân tích thật)
+    const themes = {};
+    const chars  = {};
+    for (const f of scanCache.files) {
+      const tokens = f.name.toLowerCase().replace('.txt','').split(/[\s\-_]+/);
+      tokens.forEach(t => {
+        if (t.length >= 3) themes[t] = (themes[t]||0)+1;
+      });
+      if (tokens[0]) chars[tokens[0]] = (chars[tokens[0]]||0)+1;
+    }
+    analysisData = {
+      thematicAnalysis: Object.entries(themes).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([word,score])=>({word, score})),
+      characterAnalysis: Object.entries(chars).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([name,count])=>({name, count})),
+      emotionalAnalysis: { dominantEmotion: 'bình thản' },
+      dialogueAnalysis: { style: 'tự nhiên' }
+    };
+    displayAdvancedAnalysisResults();
+    await autoSaveAnalysis();
+    byId('generateBtn').disabled = false;
+    byId('downloadAnalysisBtn').disabled = false;
+    updateStatus('✅ Phân tích xong.');
+  } catch (e) {
+    writeDetailedStatus('❌ doAnalyze: ' + e.message);
+  }
+}
+function displayAdvancedAnalysisResults() {
+  const el = byId('analysisPreview');
+  if (!analysisData) { el.innerHTML = '<i class="muted">Chưa có dữ liệu</i>'; return; }
+  const themes = (analysisData.thematicAnalysis||[]).map(t=>t.word).slice(0,6).join(', ');
+  const chars  = (analysisData.characterAnalysis||[]).map(c=>c.name).slice(0,4).join(', ');
+  el.innerHTML = `<b>Chủ đề:</b> ${themes || '—'}<br><b>Nhân vật:</b> ${chars || '—'}<br><b>Cảm xúc:</b> ${analysisData.emotionalAnalysis?.dominantEmotion || '—'}`;
+}
+async function saveScanCache(){ await saveCache(CACHE_FILE_NAME, scanCache); }
+async function loadScanCache(){
+  const data = await loadCache(CACHE_FILE_NAME, 24);
+  if (data) {
+    scanCache = data;
+    byId('analyzeBtn').disabled = (scanCache.files||[]).length === 0;
+    byId('downloadScanCacheBtn').disabled = false;
+    updateStatus(`📦 Scan cache: ${(scanCache.files||[]).length} file`);
+    return true;
+  }
+  return false;
+}
+async function autoSaveAnalysis(){ await saveCache(ANALYSIS_CACHE_NAME, { analysisData }); }
+async function loadAnalysisData(){
+  const data = await loadCache(ANALYSIS_CACHE_NAME, 48);
+  if (data && data.analysisData) {
+    analysisData = data.analysisData;
+    displayAdvancedAnalysisResults();
+    byId('generateBtn').disabled = false;
+    byId('downloadAnalysisBtn').disabled = false;
+    updateStatus('📦 Analysis cache đã tải.');
+    return true;
+  }
+  return false;
+}
+function downloadScanCache() {
+  const blob = new Blob([JSON.stringify(scanCache,null,2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = CACHE_FILE_NAME;
+  a.click();
+}
+function downloadAnalysis() {
+  const blob = new Blob([JSON.stringify(analysisData,null,2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = ANALYSIS_CACHE_NAME;
+  a.click();
+}
+async function manualUploadAnalysis(){
+  if (!analysisData) { alert('⚠️ Chưa có analysis để upload'); return; }
+  await saveCache(ANALYSIS_CACHE_NAME, { analysisData });
+  alert('✅ Upload Analysis thành công.');
+}
+
+/** =========================
+ *  Sinh tiêu đề, mô tả, đoạn văn (safe)
+ *  ========================= */
+function generateTitle(analysis) {
+  try {
+    if (!analysis || !Array.isArray(analysis.thematicAnalysis) || !Array.isArray(analysis.characterAnalysis)) {
+      return "Truyện Vô Danh " + new Date().getTime();
+    }
+    const themes = (analysis.thematicAnalysis||[]).slice(0,3).map(t=>t.word || 'bí ẩn');
+    const characters = (analysis.characterAnalysis||[]).slice(0,2).map(c=>c.name || 'nhân vật');
+    if (themes.length===0) themes.push('bí ẩn');
+    while (characters.length<2) characters.push('người kia');
+    const titlePatterns = [
+      `${characters[0]} và ${characters[1]}`,
+      `Cuộc đời ${characters[0]}`,
+      `Bí mật ${themes[0]}`,
+      `${themes[0]} và ${themes[1] || 'bí ẩn'}`,
+      `Số phận ${characters[0]}`,
+      `Ánh sáng ${themes[0]}`
+    ];
+    const title = titlePatterns[Math.floor(Math.random()*titlePatterns.length)];
+    return title || "Câu Chuyện Đặc Biệt " + new Date().getTime();
+  } catch (e) {
+    writeDetailedStatus('❌ generateTitle: ' + e.message);
+    return "Truyện Vô Danh " + new Date().getTime();
+  }
+}
+function generateDescription(analysis) {
+  try {
+    if (!analysis) return "Một câu chuyện đầy bí ẩn và bất ngờ.";
+    const themes = (analysis.thematicAnalysis||[]).slice(0,3).map(t=>t.word || 'bí ẩn');
+    const chars  = (analysis.characterAnalysis||[]).slice(0,2).map(c=>c.name || 'nhân vật');
+    const emotion= analysis.emotionalAnalysis?.dominantEmotion || 'cảm xúc';
+    while (themes.length<2) themes.push('bí ẩn');
+    while (chars.length<2) chars.push('người kia');
+    const arr = [
+      `Câu chuyện về ${chars[0]} và ${chars[1]} trong thế giới đầy ${themes[0]} và ${themes[1]}. Một hành trình đầy ${emotion}.`,
+      `${chars[0]} vốn tin rằng ${themes[0]} là tất cả, cho đến khi gặp ${chars[1]}.`,
+      `Giữa những lớp sương ${themes[0]}, ${chars[0]} tìm kiếm ý nghĩa của ${themes[1]}.`
+    ];
+    return arr[Math.floor(Math.random()*arr.length)];
+  } catch (e) {
+    writeDetailedStatus('❌ generateDescription: ' + e.message);
+    return "Một câu chuyện đầy bí ẩn.";
+  }
+}
+function generateDescriptiveParagraph(themes=["thiên nhiên","cuộc sống","bí ẩn"], emotionalStyle="bình yên"){
+  const safeThemes = Array.isArray(themes) && themes.length>0 ? themes : ["bí ẩn","huyền bí","khó lường"];
+  const arr = [
+    `Bầu trời thinh lặng, cảm giác ${emotionalStyle} lan khắp không gian. ${safeThemes[0]} và ${safeThemes[1]||'bí ẩn'} hoà vào nhau.`,
+    `Con ngõ nhỏ khúc khuỷu, gió thoảng mang mùi của ${safeThemes[2]||safeThemes[0]}.`,
+    `Căn phòng ấm, ánh đèn vàng dịu. Trên bàn, ly trà toả hương của ${safeThemes[1]||'ký ức'}.`
+  ];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function generateDialogueParagraph(characters=["Nhân vật A","Nhân vật B"], dialogueAnalysis={}){
+  if (!characters || characters.length<2) characters = ["Người lạ","Kẻ bí ẩn"];
+  const a = characters[0], b=characters[1];
+  const arr = [
+    `${a} nhìn ${b}: "Mình đã sẵn sàng chưa?"\n${b} mỉm cười: "Chỉ có cách là thử thôi."`,
+    `"Em có sợ không?" ${a} khẽ hỏi.\n${b} đáp: "Có, nhưng em tin ở anh."`
+  ];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function generateActionParagraph(characters=["Nhân vật"], themes=["bí ẩn"]){
+  const c = characters[0] || "Nhân vật";
+  const arr = [
+    `${c} bước nhanh qua ngõ hẹp, ánh mắt sáng lên khi thấy dấu vết mới.`,
+    `${c} siết chặt bàn tay, quyết định đối diện với ${themes[0]||'bóng tối'}.`
+  ];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function generateReflectionParagraph(characters=["Nhân vật"], emotionalStyle="bối rối"){
+  const c = characters[0] || "Người kể";
+  const arr = [
+    `${c} ngồi lặng nhìn ra ngoài khung cửa, một dòng ${emotionalStyle} chảy qua tâm trí.`,
+    `Trong khoảng lặng, ${c} nhận ra điều quan trọng bấy lâu mình né tránh.`
+  ];
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+function generateParagraph(analysis, themes, characters, emotionalStyle, sensitivityLevel){
+  try{
+    const types = ['description','dialogue','action','reflection'];
+    const t = types[Math.floor(Math.random()*types.length)];
+    if (t==='description') return generateDescriptiveParagraph(themes, emotionalStyle);
+    if (t==='dialogue')    return generateDialogueParagraph(characters, analysis?.dialogueAnalysis||{});
+    if (t==='action')      return generateActionParagraph(characters, themes);
+    if (t==='reflection')  return generateReflectionParagraph(characters, emotionalStyle);
+    return 'Một đoạn văn ngẫu nhiên.';
+  }catch(e){
+    writeDetailedStatus('❌ generateParagraph: '+e.message);
+    return 'Đoạn văn bị lỗi khi tạo.';
+  }
+}
+function generateChapterContent(analysis, emotionalStyle="bình thản", minWords=600, maxWords=900){
+  try{
+    const target = Math.floor(Math.random()*(maxWords-minWords+1)) + minWords;
+    const themes = (analysis?.thematicAnalysis||[{word:'bí ẩn'}]).map(t=>t.word);
+    const chars  = (analysis?.characterAnalysis||[{name:'nhân vật'}]).map(c=>c.name);
+    let content = '', wc = 0, loops = 0, maxLoops = target*3;
+    while (wc < target && loops < maxLoops) {
+      const p = generateParagraph(analysis, themes, chars, emotionalStyle);
+      content += (p||'') + '\n\n';
+      wc += (p ? p.split(/\s+/).length : 0);
+      loops++;
+    }
+    return content.trim() || "Nội dung chương tạm thời rỗng.";
+  }catch(e){
+    writeDetailedStatus('❌ generateChapterContent: '+e.message);
+    return "Nội dung chương bị lỗi khi tạo.";
+  }
+}
+
+/** =========================
+ *  Viết truyện & lưu Drive
+ *  ========================= */
+function generateStory(numChapters=5, emotionalStyle="bình thản"){
+  const story = {
+    title: generateTitle(analysisData),
+    description: generateDescription(analysisData),
+    chapters: []
+  };
+  for (let i=1;i<=numChapters;i++){
+    story.chapters.push({
+      title: `Chương ${i}`,
+      content: generateChapterContent(analysisData, emotionalStyle)
+    });
+  }
+  return story;
+}
+async function handleGenerateStory(){
+  try{
+    if (!analysisData){ alert('⚠️ Chưa có dữ liệu phân tích. Hãy quét & phân tích trước.'); return; }
+    const numChapters = parseInt(byId('numChapters').value) || 5;
+    const style = byId('sensitivitySelect').value || 'bình thản';
+    const story = generateStory(numChapters, style);
+    byId('storyPreview').textContent = story.description;
+    const rootId = await getOrCreateRootFolder();
+    const storyFolderId = await saveStoryToDrive(story, rootId);
+    if (storyFolderId){
+      updateStatus(`📁 Đã tạo folder truyện: ${story.title} (id: ${storyFolderId}) cùng ${story.chapters.length} chương.`);
+      // Cải thiện AI bằng chính truyện vừa sinh
+      improveAIWithStory(story);
+      await autoSaveAnalysis();
+      // Dọn rác nếu có
+      await cleanupUntitledFiles(storyFolderId);
+    }
+  }catch(e){
+    writeDetailedStatus('❌ handleGenerateStory: '+e.message);
+  }
+}
+async function saveStoryToDrive(story, parentFolderId) {
+  try{
+    const ok = await ensureOnlineAndAuth(); if (!ok) return null;
+    // Tạo folder truyện
+    const folder = await gapi.client.drive.files.create({
+      resource: {
+        name: story.title,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: [parentFolderId]
+      },
+      fields: 'id'
+    });
+    const storyFolderId = folder.result.id;
+
+    if (!story.chapters || story.chapters.length===0){
+      writeDetailedStatus('⚠️ Story không có chương nào.');
+      return storyFolderId;
+    }
+    // Lưu từng chương
+    for (const ch of story.chapters){
+      const fileName = `${ch.title}.txt`;
+      const metadata = { name: fileName, mimeType: 'text/plain', parents: [storyFolderId] };
+      await uploadFileToDrive(null, metadata, ch.content || '');
+    }
+    return storyFolderId;
+  }catch(e){
+    writeDetailedStatus('❌ saveStoryToDrive: '+e.message);
+    return null;
+  }
+}
+
+/** =========================
+ *  Cleanup rác: Untitled, 0 byte, folder rỗng
+ *  ========================= */
+async function cleanupUntitledFiles(parentFolderId){
+  try{
+    const ok = await ensureOnlineAndAuth(); if (!ok) return;
+    // Duyệt recursive
+    async function sweep(folderId){
+      const res = await gapi.client.drive.files.list({
+        q: `'${folderId}' in parents and trashed=false`,
+        fields: 'files(id, name, mimeType, size)'
+      });
+      const children = res.result.files || [];
+      for (const f of children){
+        if (f.mimeType === 'application/vnd.google-apps.folder'){
+          await sweep(f.id);
+          // Sau khi dọn con, nếu rỗng thì xoá
+          const check = await gapi.client.drive.files.list({
+            q: `'${f.id}' in parents and trashed=false`,
+            fields: 'files(id)', pageSize: 1
+          });
+          if (check.result.files.length===0){
+            await gapi.client.drive.files.delete({ fileId: f.id });
+            writeDetailedStatus(`🗑️ Xoá folder rỗng: ${f.name}`);
+          }
+        } else {
+          const isUntitled = /^Untitled|Không có tên/i.test(f.name);
+          const isEmpty = !f.size || parseInt(f.size)===0;
+          if (isUntitled || isEmpty){
+            await gapi.client.drive.files.delete({ fileId: f.id });
+            writeDetailedStatus(`🗑️ Xoá file rác: ${f.name} (size: ${f.size||0})`);
+          }
         }
+      }
+    }
+    await sweep(parentFolderId);
+  }catch(e){
+    writeDetailedStatus('❌ cleanupUntitledFiles: '+e.message);
+  }
+}
+
+/** =========================
+ *  Thư viện & Trình đọc
+ *  ========================= */
+async function loadStories(){
+  try{
+    const ok = await ensureOnlineAndAuth(); if (!ok) return;
+    const rootId = await getOrCreateRootFolder();
+    const res = await gapi.client.drive.files.list({
+      q: `'${rootId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)'
+    });
+    const stories = res.result.files;
+    const lib = byId('storiesLibrary');
+    byId('readerContainer').style.display = 'none';
+    if (!stories || stories.length===0){
+      lib.innerHTML = '<p class="muted">Chưa có truyện nào trong thư viện.</p>';
+      return;
+    }
+    lib.innerHTML = stories.map(s => `
+      <div class="card">
+        <b>${s.name}</b><br/>
+        <button class="btn" onclick="openStoryFolder('${s.id}','${encodeURIComponent(s.name)}')">Mở & đọc</button>
+      </div>
+    `).join('');
+  }catch(e){
+    writeDetailedStatus('❌ loadStories: '+e.message);
+  }
+}
+async function openStoryFolder(folderId, encName){
+  try{
+    const ok = await ensureOnlineAndAuth(); if (!ok) return;
+    const name = decodeURIComponent(encName);
+    const res = await gapi.client.drive.files.list({
+      q: `'${folderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`,
+      fields: 'files(id, name)',
+      orderBy: 'name_natural'
+    });
+    const files = res.result.files || [];
+    if (files.length===0){ alert('Folder chưa có chương.'); return; }
+    // Tải nội dung các file .txt
+    const chapters = [];
+    for (const f of files){
+      const content = await gapi.client.drive.files.get({ fileId: f.id, alt: 'media' });
+      chapters.push({ title: f.name.replace(/\.txt$/i,''), content: content.body || '' });
+    }
+    currentRead = { title: name, chapters, index: 0 };
+    showChapter(0);
+  }catch(e){
+    writeDetailedStatus('❌ openStoryFolder: '+e.message);
+  }
+}
+function showChapter(i){
+  if (!currentRead.chapters || i<0 || i>=currentRead.chapters.length) return;
+  currentRead.index = i;
+  byId('readerTitle').textContent = `📖 ${currentRead.title} — ${currentRead.chapters[i].title}`;
+  byId('readerContent').textContent = currentRead.chapters[i].content;
+  byId('readerContainer').style.display = 'block';
+}
+function prevChapter(){ showChapter(currentRead.index - 1); }
+function nextChapter(){ showChapter(currentRead.index + 1); }
+
+/** =========================
+ *  Cải thiện AI sau khi viết
+ *  ========================= */
+function analyzeText(text){
+  // DEMO: phân tích cực đơn giản từ text (bạn thay bằng mô hình/logic thật của bạn)
+  const words = (text||'').toLowerCase().split(/\W+/).filter(w=>w.length>=4);
+  const freq = {};
+  words.forEach(w => freq[w]=(freq[w]||0)+1);
+  const themes = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([word,score])=>({word,score}));
+  const chars  = themes.slice(0,3).map(t=>({name: t.word}));
+  return {
+    thematicAnalysis: themes,
+    characterAnalysis: chars,
+    emotionalAnalysis: { dominantEmotion: 'bình thản' },
+    dialogueAnalysis: { style: 'tự nhiên' }
+  };
+}
+function mergeAnalysisData(oldData, newData){
+  if (!oldData) return newData;
+  if (!newData) return oldData;
+  return {
+    thematicAnalysis: [...(oldData.thematicAnalysis||[]), ...(newData.thematicAnalysis||[])].slice(-200),
+    characterAnalysis: [...(oldData.characterAnalysis||[]), ...(newData.characterAnalysis||[])].slice(-100),
+    emotionalAnalysis: newData.emotionalAnalysis || oldData.emotionalAnalysis,
+    dialogueAnalysis: { ...(oldData.dialogueAnalysis||{}), ...(newData.dialogueAnalysis||{}) }
+  };
+}
+function improveAIWithStory(story){
+  try{
+    if (!story || !Array.isArray(story.chapters) || story.chapters.length===0) return;
+    const full = story.chapters.map(ch => ch.content||'').join('\n\n');
+    const fresh = analyzeText(full);
+    analysisData = mergeAnalysisData(analysisData, fresh);
+    displayAdvancedAnalysisResults();
+    writeDetailedStatus(`🎯 AI vừa học thêm từ ${story.chapters.length} chương.`);
+  }catch(e){
+    writeDetailedStatus('❌ improveAIWithStory: '+e.message);
+  }
+}
+</script>
 
-        function showMessage(text, type = 'error') {
-            const messageDiv = document.getElementById('message');
-            messageDiv.className = `${type} fade-in`;
-            messageDiv.textContent = text;
-            setTimeout(() => {
-                messageDiv.textContent = '';
-                messageDiv.className = '';
-            }, 5000);
-        }
-
-        function updateStatus(connected) {
-            const statusDiv = document.getElementById('status');
-            if (connected) {
-                statusDiv.className = 'status connected fade-in';
-                statusDiv.textContent = '🟢 Đã kết nối Supabase';
-                
-                // Enable buttons
-                document.querySelectorAll('button[disabled]').forEach(btn => {
-                    btn.disabled = false;
-                });
-            } else {
-                statusDiv.className = 'status disconnected';
-                statusDiv.textContent = '🔴 Chưa kết nối Supabase';
-                
-                // Disable buttons except connect button
-                document.querySelectorAll('.btn:not(.btn-primary)').forEach(btn => {
-                    btn.disabled = true;
-                });
-            }
-        }
-
-        async function connectSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            bucketName = document.getElementById('bucketName').value.trim() || 'text-files';
-
-            if (!url || !key) {
-                showMessage('Vui lòng nhập đầy đủ URL và Key của Supabase!');
-                return;
-            }
-
-            try {
-                supabase = window.supabase.createClient(url, key);
-                
-                const { data, error } = await supabase.storage.from(bucketName).list();
-                
-                if (error) {
-                    if (error.message.includes('not found')) {
-                        showMessage('Bucket không tồn tại. Vui lòng tạo bucket trong Supabase Dashboard.');
-                        throw error;
-                    }
-                    throw error;
-                }
-
-                updateStatus(true);
-                showMessage('Kết nối Supabase thành công!', 'success');
-                loadFiles();
-                
-            } catch (error) {
-                console.error('Error connecting to Supabase:', error);
-                showMessage(`Lỗi kết nối: ${error.message}`);
-                updateStatus(false);
-            }
-        }
-
-        async function saveFile() {
-            if (!supabase) {
-                showMessage('Vui lòng kết nối Supabase trước!');
-                return;
-            }
-
-            const fileName = document.getElementById('fileName').value.trim();
-            const content = document.getElementById('fileContent').value;
-
-            if (!fileName) {
-                showMessage('Vui lòng nhập tên file!');
-                return;
-            }
-
-            if (!fileName.endsWith('.txt')) {
-                showMessage('Tên file phải có đuôi .txt!');
-                return;
-            }
-
-            try {
-                const file = new Blob([content], { type: 'text/plain' });
-
-                const { data, error } = await supabase.storage
-                    .from(bucketName)
-                    .upload(fileName, file, { upsert: true });
-
-                if (error) throw error;
-
-                showMessage(`File "${fileName}" đã được lưu thành công!`, 'success');
-                loadFiles();
-                
-            } catch (error) {
-                console.error('Error saving file:', error);
-                showMessage(`Lỗi lưu file: ${error.message}`);
-            }
-        }
-
-        async function loadFiles() {
-            if (!supabase) {
-                showMessage('Vui lòng kết nối Supabase trước!');
-                return;
-            }
-
-            const fileList = document.getElementById('fileList');
-            fileList.innerHTML = '<div class="loading">Đang tải danh sách file...</div>';
-
-            try {
-                const { data, error } = await supabase.storage.from(bucketName).list();
-
-                if (error) throw error;
-
-                if (!data || data.length === 0) {
-                    fileList.innerHTML = '<div class="loading">Không có file nào</div>';
-                    return;
-                }
-
-                const txtFiles = data.filter(file => file.name.endsWith('.txt'));
-
-                if (txtFiles.length === 0) {
-                    fileList.innerHTML = '<div class="loading">Không có file .txt nào</div>';
-                    return;
-                }
-
-                fileList.innerHTML = '';
-                
-                txtFiles.forEach(file => {
-                    const fileItem = document.createElement('div');
-                    fileItem.className = 'file-item fade-in';
-                    fileItem.innerHTML = `
-                        <div>
-                            <div class="file-name">📄 ${file.name}</div>
-                            <div class="file-date">📅 ${new Date(file.updated_at).toLocaleString('vi-VN')}</div>
-                        </div>
-                        <div>
-                            <button onclick="loadFile('${file.name}')" style="background: #5a67d8; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-right: 5px;">Mở</button>
-                            <button onclick="deleteFile('${file.name}')" style="background: #f56565; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Xóa</button>
-                        </div>
-                    `;
-                    fileList.appendChild(fileItem);
-                });
-
-            } catch (error) {
-                console.error('Error loading files:', error);
-                showMessage(`Lỗi tải danh sách file: ${error.message}`);
-                fileList.innerHTML = '<div class="loading">Lỗi tải file</div>';
-            }
-        }
-
-        async function loadFile(fileName) {
-            if (!supabase) {
-                showMessage('Vui lòng kết nối Supabase trước!');
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase.storage
-                    .from(bucketName)
-                    .download(fileName);
-
-                if (error) throw error;
-
-                const text = await data.text();
-                
-                document.getElementById('fileName').value = fileName;
-                document.getElementById('fileContent').value = text;
-                
-                showMessage(`File "${fileName}" đã được tải thành công!`, 'success');
-                
-            } catch (error) {
-                console.error('Error loading file:', error);
-                showMessage(`Lỗi tải file: ${error.message}`);
-            }
-        }
-
-        async function deleteFile(fileName) {
-            if (!confirm(`Bạn có chắc muốn xóa file "${fileName}"?`)) {
-                return;
-            }
-
-            try {
-                const { error } = await supabase.storage
-                    .from(bucketName)
-                    .remove([fileName]);
-
-                if (error) throw error;
-
-                showMessage(`File "${fileName}" đã được xóa!`, 'success');
-                loadFiles();
-                
-            } catch (error) {
-                console.error('Error deleting file:', error);
-                showMessage(`Lỗi xóa file: ${error.message}`);
-            }
-        }
-
-        async function analyzeAllFiles() {
-            if (!supabase) {
-                showMessage('Vui lòng kết nối Supabase trước!');
-                return;
-            }
-
-            const analysisResult = document.getElementById('analysisResult');
-            const analysisContent = document.getElementById('analysisContent');
-            
-            analysisResult.style.display = 'block';
-            analysisContent.innerHTML = '<div class="loading">Đang phân tích các file txt...</div>';
-
-            try {
-                const { data: files, error } = await supabase.storage.from(bucketName).list();
-                if (error) throw error;
-
-                const txtFiles = files.filter(file => file.name.endsWith('.txt'));
-                
-                if (txtFiles.length === 0) {
-                    analysisContent.innerHTML = '<p>Không có file txt nào để phân tích.</p>';
-                    return;
-                }
-
-                let allContent = '';
-                let analysis = {
-                    totalFiles: txtFiles.length,
-                    totalWords: 0,
-                    totalCharacters: 0,
-                    genres: {},
-                    commonWords: {},
-                    themes: []
-                };
-
-                for (let file of txtFiles) {
-                    const { data, error } = await supabase.storage
-                        .from(bucketName)
-                        .download(file.name);
-                    
-                    if (error) continue;
-                    
-                    const text = await data.text();
-                    allContent += text + ' ';
-                    
-                    analysis.totalWords += text.split(/\s+/).length;
-                    analysis.totalCharacters += text.length;
-                }
-
-                // Simple text analysis
-                const words = allContent.toLowerCase().split(/\s+/).filter(word => word.length > 3);
-                const wordCount = {};
-                
-                words.forEach(word => {
-                    wordCount[word] = (wordCount[word] || 0) + 1;
-                });
-
-                const sortedWords = Object.entries(wordCount)
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 20);
-
-                analysis.commonWords = Object.fromEntries(sortedWords);
-
-                // Detect themes/genres
-                const themeKeywords = {
-                    'tình yêu': ['yêu', 'tình', 'lãng mạn', 'hẹn hò', 'cưới', 'đám cưới'],
-                    'hành động': ['đánh', 'chiến đấu', 'súng', 'dao', 'máu', 'chiến tranh'],
-                    'kinh dị': ['ma', 'quỷ', 'sợ hãi', 'đêm', 'tối', 'chết'],
-                    'khoa học': ['công nghệ', 'robot', 'tương lai', 'vũ trụ', 'khám phá'],
-                    'phiêu lưu': ['mạo hiểm', 'khám phá', 'du lịch', 'rừng', 'biển']
-                };
-
-                Object.entries(themeKeywords).forEach(([theme, keywords]) => {
-                    const score = keywords.reduce((sum, keyword) => {
-                        return sum + (wordCount[keyword] || 0);
-                    }, 0);
-                    
-                    if (score > 0) {
-                        analysis.themes.push({ theme, score });
-                    }
-                });
-
-                analysis.themes.sort((a, b) => b.score - a.score);
-
-                // Display results
-                analysisContent.innerHTML = `
-                    <div style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); display: grid; gap: 15px;">
-                        <div style="background: #e6fffa; padding: 15px; border-radius: 8px;">
-                            <h5>📊 Thống kê tổng quan</h5>
-                            <p><strong>Số file:</strong> ${analysis.totalFiles}</p>
-                            <p><strong>Tổng từ:</strong> ${analysis.totalWords.toLocaleString()}</p>
-                            <p><strong>Tổng ký tự:</strong> ${analysis.totalCharacters.toLocaleString()}</p>
-                        </div>
-                        
-                        <div style="background: #fff5f5; padding: 15px; border-radius: 8px;">
-                            <h5>🎭 Chủ đề phổ biến</h5>
-                            ${analysis.themes.slice(0, 5).map(t => 
-                                `<p><strong>${t.theme}:</strong> ${t.score} lần xuất hiện</p>`
-                            ).join('')}
-                        </div>
-                        
-                        <div style="background: #f7fafc; padding: 15px; border-radius: 8px;">
-                            <h5>📝 Từ khóa thường gặp</h5>
-                            ${Object.entries(analysis.commonWords).slice(0, 10).map(([word, count]) => 
-                                `<p><strong>${word}:</strong> ${count}</p>`
-                            ).join('')}
-                        </div>
-                    </div>
-                `;
-
-            } catch (error) {
-                console.error('Error analyzing files:', error);
-                analysisContent.innerHTML = `<p class="error">Lỗi phân tích: ${error.message}</p>`;
-            }
-        }
-
-        async function generateStory() {
-            if (!supabase) {
-                showMessage('Vui lòng kết nối Supabase trước!');
-                return;
-            }
-
-            const title = document.getElementById('storyTitle').value.trim();
-            const genre = document.getElementById('storyGenre').value;
-            const chapterCount = parseInt(document.getElementById('chapterCount').value);
-            const prompt = document.getElementById('storyPrompt').value.trim();
-
-            if (!title || !prompt) {
-                showMessage('Vui lòng nhập tên truyện và mô tả cốt truyện!');
-                return;
-            }
-
-            if (chapterCount < 50) {
-                showMessage('Số chương phải tối thiểu 50!');
-                return;
-            }
-
-            const progressDiv = document.getElementById('generationProgress');
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-            
-            progressDiv.style.display = 'block';
-            progressFill.style.width = '0%';
-
-            try {
-                // Generate story outline first
-                progressText.textContent = 'Đang tạo dàn bài truyện...';
-                progressFill.style.width = '5%';
-
-                const storyOutline = await generateStoryOutline(title, genre, chapterCount, prompt);
-                
-                progressText.textContent = 'Đang tạo các chương...';
-                
-                for (let i = 0; i < chapterCount; i++) {
-                    const chapterTitle = `Chương ${i + 1}: ${storyOutline.chapters[i] || 'Tiếp tục câu chuyện'}`;
-                    const chapterContent = await generateChapter(title, genre, i + 1, prompt, storyOutline);
-                    
-                    // Save chapter to Supabase
-                    const fileName = `${title}_chuong_${String(i + 1).padStart(3, '0')}.txt`;
-                    const content = `${chapterTitle}\n\n${chapterContent}`;
-                    const file = new Blob([content], { type: 'text/plain' });
-                    
-                    await supabase.storage
-                        .from(bucketName)
-                        .upload(fileName, file, { upsert: true });
-                    
-                    // Update progress
-                    const progress = Math.round(((i + 1) / chapterCount) * 90) + 5;
-                    progressFill.style.width = progress + '%';
-                    progressText.textContent = `Đã tạo ${i + 1}/${chapterCount} chương...`;
-                    
-                    // Small delay to prevent overwhelming
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-
-                // Save story metadata
-                const metadata = {
-                    title,
-                    genre,
-                    chapterCount,
-                    prompt,
-                    createdAt: new Date().toISOString(),
-                    outline: storyOutline
-                };
-
-                const metadataFile = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
-                await supabase.storage
-                    .from(bucketName)
-                    .upload(`${title}_metadata.json`, metadataFile, { upsert: true });
-
-                progressFill.style.width = '100%';
-                progressText.textContent = 'Hoàn thành!';
-                
-                showMessage(`Truyện "${title}" với ${chapterCount} chương đã được tạo thành công!`, 'success');
-                
-                setTimeout(() => {
-                    progressDiv.style.display = 'none';
-                }, 2000);
-
-            } catch (error) {
-                console.error('Error generating story:', error);
-                showMessage(`Lỗi tạo truyện: ${error.message}`);
-                progressDiv.style.display = 'none';
-            }
-        }
-
-        async function generateStoryOutline(title, genre, chapterCount, prompt) {
-            // Simple story structure generator
-            const genreTemplates = {
-                fantasy: {
-                    themes: ['phép thuật', 'rồng', 'phù thủy', 'vương quốc', 'nhiệm vụ'],
-                    structure: ['khởi đầu', 'gặp thầy', 'học phép', 'thử thách', 'chiến đấu', 'chiến thắng']
-                },
-                romance: {
-                    themes: ['tình yêu', 'gặp gỡ', 'hiểu lầm', 'chia ly', 'tái hợp'],
-                    structure: ['gặp nhau', 'yêu', 'khó khăn', 'chia tay', 'nhận ra', 'hạnh phúc']
-                },
-                adventure: {
-                    themes: ['khám phá', 'bảo vật', 'nguy hiểm', 'bạn đồng hành'],
-                    structure: ['xuất phát', 'gặp khó', 'tìm manh mối', 'khám phá', 'đối đầu', 'thành công']
-                }
-            };
-
-            const template = genreTemplates[genre] || genreTemplates.fantasy;
-            const chapters = [];
-
-            // Generate chapter titles based on story structure
-            const sectionsPerPart = Math.floor(chapterCount / template.structure.length);
-            
-            for (let i = 0; i < chapterCount; i++) {
-                const partIndex = Math.floor(i / sectionsPerPart);
-                const part = template.structure[partIndex] || template.structure[template.structure.length - 1];
-                chapters.push(`${part} - ${template.themes[i % template.themes.length]}`);
-            }
-
-            return {
-                title,
-                genre,
-                chapterCount,
-                chapters,
-                themes: template.themes
-            };
-        }
-
-        async function generateChapter(storyTitle, genre, chapterNum, prompt, outline) {
-            // Simple chapter content generator using templates
-            const chapterTemplates = {
-                opening: [
-                    "Trong một ngày đẹp trời, nhân vật chính bước vào cuộc phiêu lưu mới...",
-                    "Câu chuyện bắt đầu khi...",
-                    "Mọi thứ thay đổi khi..."
-                ],
-                middle: [
-                    "Tình huống trở nên phức tạp khi...",
-                    "Nhân vật phải đối mặt với thử thách...",
-                    "Một bước ngoặt bất ngờ xảy ra..."
-                ],
-                ending: [
-                    "Cuối cùng, mọi thứ được giải quyết...",
-                    "Nhân vật đã học được bài học quý giá...",
-                    "Câu chuyện kết thúc với..."
-                ]
-            };
-
-            let template;
-            if (chapterNum <= 5) template = chapterTemplates.opening;
-            else if (chapterNum >= outline.chapterCount - 5) template = chapterTemplates.ending;
-            else template = chapterTemplates.middle;
-
-            const randomTemplate = template[Math.floor(Math.random() * template.length)];
-            
-            // Generate chapter content (simplified)
-            const content = `${randomTemplate}
-
-Trong chương này, câu chuyện tiếp tục phát triển theo hướng ${outline.chapters[chapterNum - 1]}.
-
-${prompt}
-
-Nhân vật chính tiếp tục hành trình của mình, khám phá những điều mới mẻ và đối mặt với những thử thách trong thế giới ${genre}.
-
-Chương này đánh dấu một bước tiến quan trọng trong cốt truyện, mở ra nhiều khả năng thú vị cho những chương tiếp theo.
-
-[Nội dung chi tiết của chương ${chapterNum} sẽ được phát triển dựa trên cốt truyện: ${prompt}]
-
-Kết thúc chương ${chapterNum}, độc giả được dẫn dắt đến những sự kiện hấp dẫn sẽ diễn ra trong chương tiếp theo.`;
-
-            return content;
-        }
-
-        async function loadStories() {
-            if (!supabase) return;
-
-            const storyList = document.getElementById('storyList');
-            storyList.innerHTML = '<div class="loading">Đang tải danh sách truyện...</div>';
-
-            try {
-                const { data: files, error } = await supabase.storage.from(bucketName).list();
-                if (error) throw error;
-
-                const storyFiles = files.filter(file => file.name.includes('_metadata.json'));
-                
-                if (storyFiles.length === 0) {
-                    storyList.innerHTML = '<div class="loading">Chưa có truyện nào</div>';
-                    return;
-                }
-
-                storyList.innerHTML = '';
-
-                for (let file of storyFiles) {
-                    try {
-                        const { data, error } = await supabase.storage
-                            .from(bucketName)
-                            .download(file.name);
-                        
-                        if (error) continue;
-                        
-                        const metadata = JSON.parse(await data.text());
-                        
-                        const storyItem = document.createElement('div');
-                        storyItem.className = 'story-item fade-in';
-                        storyItem.innerHTML = `
-                            <div>
-                                <div class="file-name">📚 ${metadata.title}</div>
-                                <div class="file-date">🎭 ${metadata.genre} • ${metadata.chapterCount} chương</div>
-                                <div class="chapter-preview">${metadata.prompt.substring(0, 100)}...</div>
-                            </div>
-                            <button onclick="readStory('${metadata.title}')" style="background: #48bb78; color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;">Đọc</button>
-                        `;
-                        storyList.appendChild(storyItem);
-                    } catch (e) {
-                        continue;
-                    }
-                }
-
-            } catch (error) {
-                console.error('Error loading stories:', error);
-                storyList.innerHTML = '<div class="loading">Lỗi tải truyện</div>';
-            }
-        }
-
-        async function loadStorySelector() {
-            if (!supabase) return;
-
-            const selector = document.getElementById('selectedStory');
-            const selectorDiv = document.getElementById('storySelector');
-            
-            try {
-                const { data: files, error } = await supabase.storage.from(bucketName).list();
-                if (error) throw error;
-
-                const storyFiles = files.filter(file => file.name.includes('_metadata.json'));
-                
-                selector.innerHTML = '<option value="">-- Chọn truyện --</option>';
-                
-                for (let file of storyFiles) {
-                    try {
-                        const { data, error } = await supabase.storage
-                            .from(bucketName)
-                            .download(file.name);
-                        
-                        if (error) continue;
-                        
-                        const metadata = JSON.parse(await data.text());
-                        
-                        const option = document.createElement('option');
-                        option.value = metadata.title;
-                        option.textContent = `${metadata.title} (${metadata.chapterCount} chương)`;
-                        selector.appendChild(option);
-                    } catch (e) {
-                        continue;
-                    }
-                }
-                
-                selectorDiv.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error loading story selector:', error);
-            }
-        }
-
-        async function loadStoryChapters() {
-            const storyTitle = document.getElementById('selectedStory').value;
-            if (!storyTitle) return;
-
-            currentStory = storyTitle;
-            currentChapter = 0;
-            storyChapters = [];
-
-            try {
-                const { data: files, error } = await supabase.storage.from(bucketName).list();
-                if (error) throw error;
-
-                const chapterFiles = files
-                    .filter(file => file.name.startsWith(storyTitle + '_chuong_') && file.name.endsWith('.txt'))
-                    .sort((a, b) => a.name.localeCompare(b.name));
-
-                for (let file of chapterFiles) {
-                    const { data, error } = await supabase.storage
-                        .from(bucketName)
-                        .download(file.name);
-                    
-                    if (error) continue;
-                    
-                    const content = await data.text();
-                    storyChapters.push(content);
-                }
-
-                if (storyChapters.length > 0) {
-                    document.getElementById('chapterSelector').style.display = 'block';
-                    document.getElementById('storyContent').style.display = 'block';
-                    displayChapter(0);
-                }
-
-            } catch (error) {
-                console.error('Error loading story chapters:', error);
-                showMessage('Lỗi tải truyện: ' + error.message);
-            }
-        }
-
-        function displayChapter(index) {
-            if (index < 0 || index >= storyChapters.length) return;
-
-            currentChapter = index;
-            
-            document.getElementById('currentChapterTitle').textContent = `Chương ${index + 1}`;
-            document.getElementById('chapterContent').textContent = storyChapters[index];
-
-            // Update navigation buttons
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === storyChapters.length - 1;
-        }
-
-        function previousChapter() {
-            if (currentChapter > 0) {
-                displayChapter(currentChapter - 1);
-            }
-        }
-
-        function nextChapter() {
-            if (currentChapter < storyChapters.length - 1) {
-                displayChapter(currentChapter + 1);
-            }
-        }
-
-        function readStory(storyTitle) {
-            // Switch to reader tab and load story
-            switchTab('reader');
-            document.getElementById('selectedStory').value = storyTitle;
-            loadStoryChapters();
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            updateStatus(false);
-            
-            // Add enter key support for inputs
-            ['supabaseUrl', 'supabaseKey', 'bucketName'].forEach(id => {
-                document.getElementById(id).addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        connectSupabase();
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>
+index.html 2.txt
+Hiển thị index.html 2.txt.
